@@ -1,4 +1,7 @@
 
+(function(exports){
+  
+  
 exports.sync = function(func){
   return function(ctx, clb) {
     var new_ctx = func.call(this, ctx);
@@ -75,3 +78,6 @@ exports.parallel = function(){
     emit_steps.call(this, _steps, ctx, clb);
   };
 }
+
+  
+})(this);
