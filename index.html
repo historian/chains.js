@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <title>untitled</title>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  <script src="chains.js" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript" charset="utf-8">
+
+var work = function(e, c) { setTimeout(function(){ c(e); }, 1000); };
+
+var c = serial([
+  function(e, c){ $('#hello').append("<p>step 1</p>"); work(e,c); },
+  function(e, c){ $('#hello').append("<p>step 2</p>"); work(e,c); },
+  function(e, c){ $('#hello').append("<p>step 3</p>"); work(e,c); }
+]);
+
+var p = parallel([
+  function(e, c){ $('#hello').append("<p>step 1</p>"); work(e,c); },
+  function(e, c){ $('#hello').append("<p>step 2</p>"); work(e,c); },
+  function(e, c){ $('#hello').append("<p>step 3</p>"); work(e,c); }
+]);
+
+$(function(){
+  $('#hello').append('<h3>Serial</h3>');
+  c.call(this, new Date().getTime(), function(e){
+    $('#hello').append('<p>took ' +  (new Date().getTime() - e) + ' miliseconds.</p>');
+    
+    $('#hello').append('<h3>Parallel</h3>');
+    p.call(this, new Date().getTime(), function(e){
+      $('#hello').append('<p>took ' +  (new Date().getTime() - e) + ' miliseconds.</p>');
+    });
+  });
+});
+
+  </script>
+</head>
+<body>
+
+<div id="hello"></div>
+
+</body>
+</html>
