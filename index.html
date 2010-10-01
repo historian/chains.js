@@ -6,24 +6,39 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <title>untitled</title>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-  <script src="chains.js" type="text/javascript" charset="utf-8"></script>
+  <script src="jquery.chains.js" type="text/javascript" charset="utf-8"></script>
   <script type="text/javascript" charset="utf-8">
 
 var work = function(e, c) { setTimeout(function(){ c(e); }, 1000); };
 
-var c = serial([
+var c = $.chains.serial([
   function(e, c){ $('#hello').append("<p>step 1</p>"); work(e,c); },
   function(e, c){ $('#hello').append("<p>step 2</p>"); work(e,c); },
   function(e, c){ $('#hello').append("<p>step 3</p>"); work(e,c); }
 ]);
 
-var p = parallel([
+var p = $.chains.parallel([
   function(e, c){ $('#hello').append("<p>step 1</p>"); work(e,c); },
   function(e, c){ $('#hello').append("<p>step 2</p>"); work(e,c); },
   function(e, c){ $('#hello').append("<p>step 3</p>"); work(e,c); }
 ]);
+
+var images = $.chains.serial(
+  $.chains.images([
+    'http://farm3.static.flickr.com/2015/2192412382_a09e92b387_z_d.jpg?zz=1',
+    'http://farm4.static.flickr.com/3485/3839571633_51f41b964c_b.jpg',
+    'http://farm3.static.flickr.com/2136/2188207036_9fa2212f58_b_d.jpg',
+    'http://farm4.static.flickr.com/3255/3211707797_954a32822f_b.jpg'
+  ]),
+  function(e, clb){
+    console.log(e);
+    $('#images').append(e.images);
+    clb(e);
+  }
+);
 
 $(function(){
+  
   $('#hello').append('<h3>Serial</h3>');
   c.call(this, new Date().getTime(), function(e){
     $('#hello').append('<p>took ' +  (new Date().getTime() - e) + ' miliseconds.</p>');
@@ -32,7 +47,12 @@ $(function(){
     p.call(this, new Date().getTime(), function(e){
       $('#hello').append('<p>took ' +  (new Date().getTime() - e) + ' miliseconds.</p>');
     });
+    
+    images({});
   });
+  
+  
+  
 });
 
   </script>
@@ -40,6 +60,7 @@ $(function(){
 <body>
 
 <div id="hello"></div>
+<div id="images"></div>
 
 </body>
 </html>
