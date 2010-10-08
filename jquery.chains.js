@@ -1,12 +1,11 @@
 
 (function($){
-  
-  $.chains = {};
-  var exports = $.chains;
-  
+
+  var exports = $;
+
   %%% import %%%
-  
-  exports.ajax = function(options){
+
+  exports.chains.ajax = function(options){
     var key = options.key || 'response';
     delete options['key'];
     return function(ctx, clb) {
@@ -33,18 +32,18 @@
       $.ajax(options);
     };
   };
-  
-  exports.batch_ajax = function(options){
+
+  exports.chains.batch_ajax = function(options){
     var key, opts, ajax = [];
     for(key in options) {
       opts = options[key];
       opts.key = key;
-      ajax.push(exports.ajax(opts));
+      ajax.push(exports.chains.ajax(opts));
     }
-    return exports.parallel(ajax);
+    return exports.chains.parallel(ajax);
   };
-  
-  exports.image = function(url, prefix){
+
+  exports.chains.image = function(url, prefix){
     if (!prefix) prefix = 'images';
     return function(ctx, clb) {
       var image = new Image();
@@ -69,12 +68,12 @@
       image.src = url;
     };
   };
-  
-  exports.images = function(urls, prefix){
+
+  exports.chains.images = function(urls, prefix){
     var i, images = [];
     for (i in urls)
-      images.push(exports.image(urls[i], prefix));
-    return exports.parallel(images);
+      images.push(exports.chains.image(urls[i], prefix));
+    return exports.chains.parallel(images);
   };
-  
+
 })(jQuery);
