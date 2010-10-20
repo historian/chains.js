@@ -28,3 +28,8 @@ task :build do
     end
   end
 end
+
+desc "Build the docco documentation"
+task :doc do
+  sh "docco " + Dir.glob('./src/*.js').join(' ')
+end

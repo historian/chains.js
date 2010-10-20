@@ -7,8 +7,7 @@
 
   exports.stacks.sync = function(func){
     return function(ctx, clb) {
-      var new_ctx = func.call(this, ctx);
-      clb(new_ctx);
+      clb(func.call(this, ctx));
     };
   };
 
