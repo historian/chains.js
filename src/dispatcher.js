@@ -4,31 +4,31 @@ exports.dispatcher = function(parent, helpers){
     helpers = parent;
     parent = undefined;
   }
-  
+
   var all_helpers = {}, name, disp;
-  
+
   if (parent && parent.helpers) {
     for (name in parent.helpers) {
       all_helpers[name] = parent.helpers[name];
     }
   }
-  
+
   if (helpers) {
     for (name in helpers) {
       all_helpers[name] = helpers[name];
     }
   }
-  
+
   disp = function(def){
     var state = {
       dispatcher: exports.stacks.cascade([])
     };
-    
+
     var kernel = state.dispatcher.kernel = function(stack){
       if (!stack) {
         stack = exports.stacks.serial([]);
       }
-    
+
       return function(func){
         if (func == 'done') {
           state.dispatcher = state.dispatcher.push(stack, true);
@@ -47,7 +47,7 @@ exports.dispatcher = function(parent, helpers){
         }
       };
     };
-    
+
     var func_name, func, wrapper, helpers = "", constants = "";
     for (func_name in all_helpers) {
       func = all_helpers[func_name];
@@ -65,16 +65,16 @@ exports.dispatcher = function(parent, helpers){
         helpers += "var "+func_name+" = state.dispatcher."+func_name+";"
       })(func_name, func);
     }
-    
+
     constants += "var done='done';";
-    
+
     eval(constants+helpers+"(" + def.toString() + ")();");
-    
+
     return state.dispatcher;
   };
-  
+
   disp.helpers = all_helpers;
-  
+
   return disp;
 };
 
@@ -111,21 +111,38 @@ exports.dispatcher.http = dispatcher({
   }
 });
 
-//--[jquery]
+// <!--[jquery]-->
 
+// ## jQuery Extentions
+
+// ### dispatcher.body(ctx, [clb])
+
+// Perform actions based on the id and the classes of the body element.
 exports.dispatcher.body = dispatcher({
+
+  // #### `(body_class)("class_name")`
+
+  // check for a class name.
   'body_class': function(stack, class_name) {
     return (this.kernel)(stack.push(function(ctx, clb){
       if ($('body').hasClass(class_name)) { clb(ctx); }
       else { clb.pass(ctx): }
     }));
   },
+
+  // #### `(body_id)("identifier")`
+
+  // check for an identifier.
   'body_id': function(stack, identifier) {
     return (this.kernel)(stack.push(function(ctx, clb){
       if ($('body')[0].id == identifier) { clb(ctx); }
       else { clb.pass(ctx): }
     }));
   },
+
+  // #### `(body)("css selector")`
+
+  // continue only when body matches the CSS selector.
   'body': function(stack, selector) {
     return (this.kernel)(stack.push(function(ctx, clb){
       if ($('body').first().filter(selector).length > 0) { clb(ctx); }
@@ -134,4 +151,4 @@ exports.dispatcher.body = dispatcher({
   }
 });
 
-//--[jquery]
+// <!--[jquery]-->

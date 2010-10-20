@@ -117,19 +117,36 @@
 
 
 
+  // ## jQuery Extentions
+
+  // ### dispatcher.body(ctx, [clb])
+
+  // Perform actions based on the id and the classes of the body element.
   exports.dispatcher.body = dispatcher({
+
+    // #### `(body_class)("class_name")`
+
+    // check for a class name.
     'body_class': function(stack, class_name) {
       return (this.kernel)(stack.push(function(ctx, clb){
         if ($('body').hasClass(class_name)) { clb(ctx); }
         else { clb.pass(ctx): }
       }));
     },
+
+    // #### `(body_id)("identifier")`
+
+    // check for an identifier.
     'body_id': function(stack, identifier) {
       return (this.kernel)(stack.push(function(ctx, clb){
         if ($('body')[0].id == identifier) { clb(ctx); }
         else { clb.pass(ctx): }
       }));
     },
+
+    // #### `(body)("css selector")`
+
+    // continue only when body matches the CSS selector.
     'body': function(stack, selector) {
       return (this.kernel)(stack.push(function(ctx, clb){
         if ($('body').first().filter(selector).length > 0) { clb(ctx); }

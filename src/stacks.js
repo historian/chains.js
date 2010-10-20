@@ -1,12 +1,20 @@
 
+// export stacks in a property called _stacks_
 exports.stacks = {};
 
+// ### stacks.sync(function)
+
+// `sync(function(ctx){ return ctx; })` turns a non-callback function into a callback function by wrapping it.
 exports.stacks.sync = function(func){
   return function(ctx, clb) {
     clb(func.call(this, ctx));
   };
 };
 
+
+// ### stacks.serial([steps, ...])
+
+// execute a list of steps one after the other.
 exports.stacks.serial = function(){
   var state = {};
 
@@ -173,7 +181,12 @@ exports.stacks.cascade = function(){
   return build(state);
 };
 
-//--[jquery]
+// <!--[jquery]-->
+// ## jQuery Extentions
+
+// ### stacks.ajax(options)
+
+// perform an AJAX request.
 exports.stacks.ajax = function(options){
   var key = options.key || 'response';
   delete options['key'];
@@ -271,13 +284,13 @@ exports.stacks.preload_images = function(container, src_attr, after){
   var images = $(container).find('img['+src_attr+']'), tasks=[], task;
   images.each(function(){
     task = exports.stacks.preload_image(this, src_attr);
-    
+
     if (after) {
       task = exports.stacks.serial([ task, after ]);
     }
-    
+
     tasks.push(task);
   });
   return exports.stacks.parallel(tasks);
 };
-//--[jquery]
+// <!--[jquery]-->

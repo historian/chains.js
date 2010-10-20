@@ -1,14 +1,22 @@
 
 (function(exports){
 
+  // export stacks in a property called _stacks_
   exports.stacks = {};
 
+  // ### stacks.sync(function)
+
+  // `sync(function(ctx){ return ctx; })` turns a non-callback function into a callback function by wrapping it.
   exports.stacks.sync = function(func){
     return function(ctx, clb) {
       clb(func.call(this, ctx));
     };
   };
 
+
+  // ### stacks.serial([steps, ...])
+
+  // execute a list of steps one after the other.
   exports.stacks.serial = function(){
     var state = {};
 
