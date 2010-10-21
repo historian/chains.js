@@ -1,10 +1,110 @@
-<!DOCTYPE html>  <html> <head>   <title>dispatcher.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="dispatcher.html">                 dispatcher.js               </a>                                           <a class="source" href="stacks.html">                 stacks.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               dispatcher.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-1">#</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">parent</span><span class="p">,</span> <span class="nx">helpers</span><span class="p">){</span>
+<!DOCTYPE html>  <html> <head>   <title>dispatcher.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="dispatcher.html">                 dispatcher.js               </a>                                           <a class="source" href="stacks.html">                 stacks.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               dispatcher.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-1">#</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="kd">var</span> <span class="nx">_kernel</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="nx">stack</span><span class="p">){</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">stack</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">stack</span> <span class="o">=</span> <span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;stacks&#39;</span><span class="p">][</span><span class="s1">&#39;serial&#39;</span><span class="p">]([]);</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">func</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">func</span> <span class="o">==</span> <span class="s1">&#39;done&#39;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">dispatcher</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">stack</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">func</span><span class="p">.</span><span class="nx">_wrap</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="kd">function</span><span class="p">(){</span>
+        <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">func</span><span class="p">[</span><span class="s1">&#39;exec&#39;</span><span class="p">](</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="p">[</span><span class="nx">stack</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">args</span><span class="p">));</span>
+      <span class="p">};</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">func</span><span class="p">.</span><span class="nx">_disp</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="kd">function</span><span class="p">(){</span>
+        <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">func</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="p">[</span><span class="nx">stack</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">args</span><span class="p">));</span>
+      <span class="p">};</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">dispatcher</span><span class="p">[</span><span class="s1">&#39;kernel&#39;</span><span class="p">](</span><span class="nx">stack</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">func</span><span class="p">));</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">_compile_constructor</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">helpers</span><span class="p">,</span> <span class="nx">def</span><span class="p">){</span>
+  <span class="kd">var</span> <span class="nx">func_name</span><span class="p">,</span> <span class="nx">code</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+  
+  <span class="nx">code</span> <span class="o">+=</span> <span class="s2">&quot;(function(){&quot;</span><span class="p">;</span>
+  <span class="nx">code</span> <span class="o">+=</span> <span class="s2">&quot;var done=&#39;done&#39;;&quot;</span><span class="p">;</span>
+  
+  <span class="k">for</span> <span class="p">(</span><span class="nx">func_name</span> <span class="k">in</span> <span class="nx">helpers</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">code</span> <span class="o">+=</span> <span class="s2">&quot;var &quot;</span><span class="o">+</span><span class="nx">func_name</span><span class="o">+</span><span class="s2">&quot; = this.&quot;</span><span class="o">+</span><span class="nx">func_name</span><span class="o">+</span><span class="s2">&quot;;&quot;</span>
+  <span class="p">}</span>
+  
+  <span class="nx">code</span> <span class="o">+=</span> <span class="s2">&quot;(&quot;</span><span class="p">;</span>
+  <span class="nx">code</span> <span class="o">+=</span> <span class="nx">def</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+  <span class="nx">code</span> <span class="o">+=</span> <span class="s2">&quot;)();});&quot;</span><span class="p">;</span>
+  
+  <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="nx">code</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">_wrapper_for_helper</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="nx">helper</span><span class="p">){</span>
+  <span class="nx">helper</span><span class="p">.</span><span class="nx">_disp</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+  
+  <span class="kd">var</span> <span class="nx">wrapper</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">disp</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">func</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">.</span><span class="nx">helper</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">_kernel</span><span class="p">(</span><span class="nx">disp</span><span class="p">)(</span><span class="nx">func</span><span class="p">).</span><span class="nx">apply</span><span class="p">(</span><span class="nx">disp</span><span class="p">,</span> <span class="nx">args</span><span class="p">);</span>
+  <span class="p">};</span>
+  
+  <span class="nx">wrapper</span><span class="p">.</span><span class="nx">_wrap</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="nx">wrapper</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">dispatcher</span><span class="p">;</span>
+  <span class="nx">wrapper</span><span class="p">.</span><span class="nx">helper</span> <span class="o">=</span> <span class="nx">helper</span>
+  <span class="nx">wrapper</span><span class="p">[</span><span class="s1">&#39;exec&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">args</span><span class="p">){</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">helper</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">args</span><span class="p">);</span>
+  <span class="p">};</span>
+  
+  <span class="k">return</span> <span class="nx">wrapper</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">_wrap_helpers</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="nx">helpers</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">func_name</span><span class="p">,</span> <span class="nx">func</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="nx">func_name</span> <span class="k">in</span> <span class="nx">helpers</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">func</span> <span class="o">=</span> <span class="nx">helpers</span><span class="p">[</span><span class="nx">func_name</span><span class="p">];</span>
+    <span class="nx">dispatcher</span><span class="p">[</span><span class="nx">func_name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">_wrapper_for_helper</span><span class="p">(</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="nx">func</span><span class="p">);</span>
+  <span class="p">};</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">_construct_dispatcher</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">helpers</span><span class="p">,</span> <span class="nx">def</span><span class="p">){</span>
+  <span class="kd">var</span> <span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;stacks&#39;</span><span class="p">][</span><span class="s1">&#39;cascade&#39;</span><span class="p">]([]);</span>
+  <span class="kd">var</span> <span class="nx">kernel</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stack</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">disp</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">_kernel</span><span class="p">(</span><span class="nx">disp</span><span class="p">,</span> <span class="nx">stack</span><span class="p">);</span>
+  <span class="p">}</span>
+  
+  <span class="nx">kernel</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">dispatcher</span><span class="p">;</span>
+  
+  <span class="nx">dispatcher</span><span class="p">[</span><span class="s1">&#39;kernel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">kernel</span><span class="p">;</span>
+  
+  <span class="nx">_wrap_helpers</span><span class="p">(</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="nx">helpers</span><span class="p">);</span>
+  
+  <span class="kd">var</span> <span class="nx">constructor</span> <span class="o">=</span> <span class="nx">_compile_constructor</span><span class="p">(</span><span class="nx">helpers</span><span class="p">,</span> <span class="nx">def</span><span class="p">);</span>
+  
+  <span class="nx">constructor</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">dispatcher</span><span class="p">);</span>
+  
+  <span class="k">return</span> <span class="nx">dispatcher</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">_define_dispatcher_class</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">helpers</span><span class="p">){</span>
+  <span class="kd">var</span> <span class="nx">dispatcher_class</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">def</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">helpers</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">.</span><span class="nx">helpers</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">_construct_dispatcher</span><span class="p">(</span><span class="nx">helpers</span><span class="p">,</span> <span class="nx">def</span><span class="p">);</span>
+  <span class="p">};</span>
+  
+  <span class="nx">dispatcher_class</span><span class="p">.</span><span class="nx">helpers</span> <span class="o">=</span> <span class="nx">helpers</span><span class="p">;</span>
+  
+  <span class="k">return</span> <span class="nx">dispatcher_class</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">parent</span><span class="p">,</span> <span class="nx">helpers</span><span class="p">){</span>
   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">helpers</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">helpers</span> <span class="o">=</span> <span class="nx">parent</span><span class="p">;</span>
     <span class="nx">parent</span> <span class="o">=</span> <span class="kc">undefined</span><span class="p">;</span>
   <span class="p">}</span>
 
-  <span class="kd">var</span> <span class="nx">all_helpers</span> <span class="o">=</span> <span class="p">{},</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">disp</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">all_helpers</span> <span class="o">=</span> <span class="p">{},</span> <span class="nx">name</span><span class="p">;</span>
 
   <span class="k">if</span> <span class="p">(</span><span class="nx">parent</span> <span class="o">&amp;&amp;</span> <span class="nx">parent</span><span class="p">.</span><span class="nx">helpers</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">for</span> <span class="p">(</span><span class="nx">name</span> <span class="k">in</span> <span class="nx">parent</span><span class="p">.</span><span class="nx">helpers</span><span class="p">)</span> <span class="p">{</span>
@@ -18,64 +118,10 @@
     <span class="p">}</span>
   <span class="p">}</span>
 
-  <span class="nx">disp</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">def</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="s1">&#39;dispatcher&#39;</span><span class="o">:</span> <span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;stacks&#39;</span><span class="p">][</span><span class="s1">&#39;cascade&#39;</span><span class="p">]([])</span>
-    <span class="p">};</span>
-
-    <span class="kd">var</span> <span class="nx">kernel</span> <span class="o">=</span> <span class="nx">state</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">][</span><span class="s1">&#39;kernel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stack</span><span class="p">){</span>
-      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">stack</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">stack</span> <span class="o">=</span> <span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;stacks&#39;</span><span class="p">][</span><span class="s1">&#39;serial&#39;</span><span class="p">]([]);</span>
-      <span class="p">}</span>
-
-      <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">func</span><span class="p">){</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">func</span> <span class="o">==</span> <span class="s1">&#39;done&#39;</span><span class="p">)</span> <span class="p">{</span>
-          <span class="nx">state</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">state</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">].</span><span class="nx">push</span><span class="p">(</span><span class="nx">stack</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">func</span><span class="p">[</span><span class="s1">&#39;_wrap&#39;</span><span class="p">])</span> <span class="p">{</span>
-          <span class="k">return</span> <span class="kd">function</span><span class="p">(){</span>
-            <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="k">return</span> <span class="nx">func</span><span class="p">[</span><span class="s1">&#39;exec&#39;</span><span class="p">](</span><span class="nx">state</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">],</span> <span class="p">[</span><span class="nx">stack</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">args</span><span class="p">));</span>
-          <span class="p">};</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">func</span><span class="p">[</span><span class="s1">&#39;_disp&#39;</span><span class="p">])</span> <span class="p">{</span>
-          <span class="k">return</span> <span class="kd">function</span><span class="p">(){</span>
-            <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="k">return</span> <span class="nx">func</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">state</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">],</span> <span class="p">[</span><span class="nx">stack</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">args</span><span class="p">));</span>
-          <span class="p">};</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-          <span class="k">return</span> <span class="nx">state</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">][</span><span class="s1">&#39;kernel&#39;</span><span class="p">](</span><span class="nx">stack</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">func</span><span class="p">));</span>
-        <span class="p">}</span>
-      <span class="p">};</span>
-    <span class="p">};</span>
-
-    <span class="kd">var</span> <span class="nx">func_name</span><span class="p">,</span> <span class="nx">func</span><span class="p">,</span> <span class="nx">wrapper</span><span class="p">,</span> <span class="nx">helpers</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nx">constants</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="nx">func_name</span> <span class="k">in</span> <span class="nx">all_helpers</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">func</span> <span class="o">=</span> <span class="nx">all_helpers</span><span class="p">[</span><span class="nx">func_name</span><span class="p">];</span>
-      <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">func_name</span><span class="p">,</span> <span class="nx">func</span><span class="p">){</span>
-        <span class="nx">func</span><span class="p">[</span><span class="s1">&#39;_disp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="nx">wrapper</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
-          <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-          <span class="k">return</span> <span class="nx">kernel</span><span class="p">()(</span><span class="nx">func</span><span class="p">).</span><span class="nx">apply</span><span class="p">(</span><span class="nx">state</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">],</span> <span class="nx">args</span><span class="p">);</span>
-        <span class="p">};</span>
-        <span class="nx">wrapper</span><span class="p">[</span><span class="s1">&#39;_wrap&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="nx">wrapper</span><span class="p">[</span><span class="s1">&#39;exec&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">args</span><span class="p">){</span>
-          <span class="k">return</span> <span class="nx">func</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">args</span><span class="p">);</span>
-        <span class="p">};</span>
-        <span class="nx">state</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">][</span><span class="nx">func_name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">wrapper</span><span class="p">;</span>
-        <span class="nx">helpers</span> <span class="o">+=</span> <span class="s2">&quot;var &quot;</span><span class="o">+</span><span class="nx">func_name</span><span class="o">+</span><span class="s2">&quot; = state[&#39;dispatcher&#39;].&quot;</span><span class="o">+</span><span class="nx">func_name</span><span class="o">+</span><span class="s2">&quot;;&quot;</span>
-      <span class="p">})(</span><span class="nx">func_name</span><span class="p">,</span> <span class="nx">func</span><span class="p">);</span>
-    <span class="p">}</span>
-
-    <span class="nx">constants</span> <span class="o">+=</span> <span class="s2">&quot;var done=&#39;done&#39;;&quot;</span><span class="p">;</span>
-
-    <span class="nb">eval</span><span class="p">(</span><span class="nx">constants</span><span class="o">+</span><span class="nx">helpers</span><span class="o">+</span><span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="nx">def</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;)();&quot;</span><span class="p">);</span>
-
-    <span class="k">return</span> <span class="nx">state</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">];</span>
-  <span class="p">};</span>
-
-  <span class="nx">disp</span><span class="p">.</span><span class="nx">helpers</span> <span class="o">=</span> <span class="nx">all_helpers</span><span class="p">;</span>
-
-  <span class="k">return</span> <span class="nx">disp</span><span class="p">;</span>
+  <span class="k">return</span> <span class="nx">_define_dispatcher_class</span><span class="p">(</span><span class="nx">all_helpers</span><span class="p">);</span>
 <span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">];</span>
 
 <span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;dispatcher&#39;</span><span class="p">][</span><span class="s1">&#39;http&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">dispatcher</span><span class="p">({</span>
   <span class="s1">&#39;method&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stack</span><span class="p">,</span> <span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
@@ -120,7 +166,7 @@
     <span class="p">}));</span>
   <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-10">#</a>               </div>               <h4><code>(body)("css selector")</code></h4>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-11">#</a>               </div>               <p>continue only when body matches the CSS selector.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="s1">&#39;body&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stack</span><span class="p">,</span> <span class="nx">selector</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span><span class="k">this</span><span class="p">[</span><span class="s1">&#39;kernel&#39;</span><span class="p">])(</span><span class="nx">stack</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">clb</span><span class="p">){</span>
-      <span class="k">if</span> <span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">first</span><span class="p">().</span><span class="nx">filter</span><span class="p">(</span><span class="nx">selector</span><span class="p">).</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="nx">clb</span><span class="p">(</span><span class="nx">ctx</span><span class="p">);</span> <span class="p">}</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">)[</span><span class="s1">&#39;first&#39;</span><span class="p">]().</span><span class="nx">filter</span><span class="p">(</span><span class="nx">selector</span><span class="p">).</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="nx">clb</span><span class="p">(</span><span class="nx">ctx</span><span class="p">);</span> <span class="p">}</span>
       <span class="k">else</span> <span class="p">{</span> <span class="nx">clb</span><span class="p">[</span><span class="s1">&#39;pass&#39;</span><span class="p">](</span><span class="nx">ctx</span><span class="p">);</span> <span class="p">}</span>
     <span class="p">}));</span>
   <span class="p">}</span>

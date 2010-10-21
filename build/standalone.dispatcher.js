@@ -1,13 +1,113 @@
 
 (function(exports){
 
+  var _kernel = function(dispatcher, stack){
+    if (!stack) {
+      stack = exports['stacks']['serial']([]);
+    }
+
+    return function(func){
+      if (func == 'done') {
+        dispatcher.push(stack, true);
+      } else if (func._wrap) {
+        return function(){
+          var args = Array.prototype.slice.call(arguments, 0);
+          return func['exec'](dispatcher, [stack].concat(args));
+        };
+      } else if (func._disp) {
+        return function(){
+          var args = Array.prototype.slice.call(arguments, 0);
+          return func.apply(dispatcher, [stack].concat(args));
+        };
+      } else {
+        return dispatcher['kernel'](stack.push(func));
+      }
+    };
+  };
+
+  var _compile_constructor = function(helpers, def){
+    var func_name, code = "";
+
+    code += "(function(){";
+    code += "var done='done';";
+
+    for (func_name in helpers) {
+      code += "var "+func_name+" = this."+func_name+";"
+    }
+
+    code += "(";
+    code += def.toString();
+    code += ")();});";
+
+    return eval(code);
+  };
+
+  var _wrapper_for_helper = function(dispatcher, helper){
+    helper._disp = true;
+
+    var wrapper = function(){
+      var args = Array.prototype.slice.call(arguments, 0);
+      var disp = arguments.callee.dispatcher;
+      var func = arguments.callee.helper;
+      return _kernel(disp)(func).apply(disp, args);
+    };
+
+    wrapper._wrap = true;
+    wrapper.dispatcher = dispatcher;
+    wrapper.helper = helper
+    wrapper['exec'] = function(t, args){
+      return this.helper.apply(t, args);
+    };
+
+    return wrapper;
+  };
+
+  var _wrap_helpers = function(dispatcher, helpers) {
+    var func_name, func;
+    for (func_name in helpers) {
+      func = helpers[func_name];
+      dispatcher[func_name] = _wrapper_for_helper(dispatcher, func);
+    };
+  };
+
+  var _construct_dispatcher = function(helpers, def){
+    var dispatcher = exports['stacks']['cascade']([]);
+    var kernel = function(stack){
+      var disp = arguments.callee.dispatcher;
+      return _kernel(disp, stack);
+    }
+
+    kernel.dispatcher = dispatcher;
+
+    dispatcher['kernel'] = kernel;
+
+    _wrap_helpers(dispatcher, helpers);
+
+    var constructor = _compile_constructor(helpers, def);
+
+    constructor.call(dispatcher);
+
+    return dispatcher;
+  };
+
+  var _define_dispatcher_class = function(helpers){
+    var dispatcher_class = function(def){
+      var helpers = arguments.callee.helpers;
+      return _construct_dispatcher(helpers, def);
+    };
+
+    dispatcher_class.helpers = helpers;
+
+    return dispatcher_class;
+  };
+
   exports['dispatcher'] = function(parent, helpers){
     if (!helpers) {
       helpers = parent;
       parent = undefined;
     }
 
-    var all_helpers = {}, name, disp;
+    var all_helpers = {}, name;
 
     if (parent && parent.helpers) {
       for (name in parent.helpers) {
@@ -21,64 +121,10 @@
       }
     }
 
-    disp = function(def){
-      var state = {
-        'dispatcher': exports['stacks']['cascade']([])
-      };
-
-      var kernel = state['dispatcher']['kernel'] = function(stack){
-        if (!stack) {
-          stack = exports['stacks']['serial']([]);
-        }
-
-        return function(func){
-          if (func == 'done') {
-            state['dispatcher'] = state['dispatcher'].push(stack, true);
-          } else if (func['_wrap']) {
-            return function(){
-              var args = Array.prototype.slice.call(arguments, 0);
-              return func['exec'](state['dispatcher'], [stack].concat(args));
-            };
-          } else if (func['_disp']) {
-            return function(){
-              var args = Array.prototype.slice.call(arguments, 0);
-              return func.apply(state['dispatcher'], [stack].concat(args));
-            };
-          } else {
-            return state['dispatcher']['kernel'](stack.push(func));
-          }
-        };
-      };
-
-      var func_name, func, wrapper, helpers = "", constants = "";
-      for (func_name in all_helpers) {
-        func = all_helpers[func_name];
-        (function(func_name, func){
-          func['_disp'] = true;
-          wrapper = function(){
-            var args = Array.prototype.slice.call(arguments, 0);
-            return kernel()(func).apply(state['dispatcher'], args);
-          };
-          wrapper['_wrap'] = true;
-          wrapper['exec'] = function(t, args){
-            return func.apply(t, args);
-          };
-          state['dispatcher'][func_name] = wrapper;
-          helpers += "var "+func_name+" = state['dispatcher']."+func_name+";"
-        })(func_name, func);
-      }
-
-      constants += "var done='done';";
-
-      eval(constants+helpers+"(" + def.toString() + ")();");
-
-      return state['dispatcher'];
-    };
-
-    disp.helpers = all_helpers;
-
-    return disp;
+    return _define_dispatcher_class(all_helpers);
   };
+
+  var dispatcher = exports['dispatcher'];
 
   exports['dispatcher']['http'] = dispatcher({
     'method': function(stack, method) {

@@ -17,7 +17,7 @@ exports['stacks']['sync'] = function(func){
 
 // execute a list of steps one after the other.
 exports['stacks']['serial'] = (function(){
-  var _perform_step, _build, _toString, _push;
+  var _perform_step, _build, _toString, _push, _call;
   
   // execute a step.
   _perform_step = function(state) {
@@ -44,26 +44,30 @@ exports['stacks']['serial'] = (function(){
   
   // build a serial.
   _build = function(class_state){
-    var serial, state = { steps: [] };
-    for (i in class_state.steps) {
-      state.steps[i] = class_state.steps[i];
-    }
-  
-    serial = function(ctx, clb){
-      var instance_state = { steps: [], ctx: ctx, clb: clb }, i;
-      
-      for (i in state.steps) {
-        instance_state.steps[i] = state.steps[i];
-      }
-      
-      _perform_step.call(this, instance_state);
+    var serial = function(ctx, clb){
+      var class_state = arguments.callee.state;
+      _call.call(this, class_state, ctx, clb);
     };
   
-    serial.state       = state;
+    serial.state       = { steps: [] };
     serial['toString'] = _toString
     serial['push']     = _push;
+    
+    for (i in class_state.steps) {
+      serial.state.steps[i] = class_state.steps[i];
+    }
   
     return serial;
+  };
+  
+  _call = function(class_state, ctx, clb){
+    var instance_state = { steps: [], ctx: ctx, clb: clb }, i;
+    
+    for (i in class_state.steps) {
+      instance_state.steps[i] = class_state.steps[i];
+    }
+    
+    _perform_step.call(this, instance_state);
   };
   
   // custom to toString()
@@ -89,7 +93,7 @@ exports['stacks']['serial'] = (function(){
 
 // execute a list of steps in parallel.
 exports['stacks']['parallel'] = (function(){
-  var _perform_step, _build, _toString, _push;
+  var _perform_step, _build, _toString, _push, _call;
 
   _perform_step = function(step, state){
     var _clb = build_callback(this, state, function(state){
@@ -106,29 +110,33 @@ exports['stacks']['parallel'] = (function(){
   };
   
   _build = function(class_state){
-    var parallel, state = { steps: [] };
-    for (i in class_state.steps) {
-      state.steps[i] = class_state.steps[i];
-    }
-    
-    parallel = function(ctx, clb){
-      var instance_state = { steps: {}, ctx: ctx, clb: clb }, step, i;
-      
-      instance_state.length = state.steps.length;
-      for (i in state.steps) {
-        instance_state.steps[i] = state.steps[i];
-      }
-      
-      for(i in instance_state.steps) {
-        _perform_step.call(this, instance_state.steps[i], instance_state);
-      }
+    var parallel = function(ctx, clb){
+      var class_state = arguments.callee.state;
+      _call.call(this, class_state, ctx, clb);
     };
   
-    parallel.state       = state;
+    parallel.state       = { steps: [] };
     parallel['toString'] = _toString
     parallel['push']     = _push;
     
+    for (i in class_state.steps) {
+      parallel.state.steps[i] = class_state.steps[i];
+    }
+    
     return parallel;
+  };
+  
+  _call = function(class_state, ctx, clb){
+    var instance_state = { steps: {}, ctx: ctx, clb: clb }, step, i;
+    
+    instance_state.length = class_state.steps.length;
+    for (i in class_state.steps) {
+      instance_state.steps[i] = class_state.steps[i];
+    }
+    
+    for(i in instance_state.steps) {
+      _perform_step.call(this, instance_state.steps[i], instance_state);
+    }
   };
   
   _toString = function(){
@@ -149,70 +157,115 @@ exports['stacks']['parallel'] = (function(){
 // ### stacks.cascade([steps, ...])
 
 // execute a step and only continue to the next step if the previous step call `clb.pass()`.
-exports['stacks']['cascade'] = function(){
-  var state = {};
+exports['stacks']['cascade'] = (function(){
+  var _build, _toString, _push, _call, _perform_step;
 
-  if ((arguments.length == 1) && (arguments[0] instanceof Array)) {
-    state.stacks = arguments[0];
-  } else {
-    state.stacks = Array.prototype.slice.call(arguments, 0);
-  }
-
-  var perform_stack, continue_chain;
-
-  perform_stack = function(stack, rest, ctx, clb) {
-    var _this = this;
-    var _clb = function(_ctx){
-      continue_chain.call(_this, 'done', _ctx || ctx, clb);
+  _perform_step = function(state) {
+    if (state.done) {
+      if (state.clb) {
+        state.clb.call(this, state.ctx);
+      }
+      
+    } else if (state.steps.length == 0) {
+      if (state.clb && state.clb['pass']) {
+        state.clb['pass'](state.ctx);
+      }
+      
+    } else {
+      var step = state.steps.shift();
+      
+      var _clb = build_callback(this, state, function(state){
+        if (!state.pass) {
+          state.done = true;
+          _perform_step.call(this, state);
+        } else {
+          _perform_step.call(this, state);
+        }
+      });
+      
+      step.call(this, state.ctx, _clb);
+    }
+  };
+  
+  _build = function(class_state){
+    var cascade = function(ctx, clb){
+      var class_state = arguments.callee.state;
+      _call.call(this, class_state, ctx, clb);
     };
-    _clb['pass'] = function(_ctx){
-      continue_chain.call(_this, rest, _ctx || ctx, clb);
-    };
-    stack.call(_this, ctx, _clb);
+
+    cascade.state       = { steps: [] };
+    cascade['toString'] = _toString;
+    cascade['push']     = _push;
+    
+    for (i in class_state.steps) {
+      cascade.state.steps[i] = class_state.steps[i];
+    }
+    
+    return cascade;
+  };
+  
+  _call = function(class_state, ctx, clb){
+    var instance_state = { steps: [], ctx: ctx, clb: clb, done: false }, i;
+    
+    for (i in class_state.steps) {
+      instance_state.steps[i] = class_state.steps[i];
+    }
+    
+    _perform_step.call(this, instance_state);
   };
 
-  continue_chain = function(rest, ctx, clb) {
-    if (rest == 'done') {
-      if (clb) { clb.call(this, ctx); }
-    } else if (rest.length == 0) {
-      if (clb && clb['pass']) { clb['pass'](ctx); }
+  _toString = function(){
+    return "cascade:["+this.state.steps.toString()+"]";
+  };
+  
+  _push = function(step, by_ref){
+    if (by_ref) {
+      this.state.steps.push(step);
+      return this;
     } else {
-      perform_stack.call(this, rest.shift(), rest, ctx, clb);
+      var c = _build(this.state);
+      c.state.steps.push(step);
+      return c;
     }
   };
 
-  var build;
-  build = function(_state){
-    var state = {stacks:[]};
-    for (i in _state.stacks) { state.stacks[i] = _state.stacks[i]; }
-
-    var cascade = function(ctx, clb){
-      var _stacks = [], i;
-      for (i in state.stacks) { _stacks[i] = state.stacks[i]; }
-      continue_chain.call(this, _stacks, ctx, clb);
-    };
-
-    cascade.state = state;
-
-    cascade['toString'] = function(){
-      return "cascade:["+cascade.state.stacks.toString()+"]";
-    };
-
-    cascade['push'] = function(stack, by_ref){
-      if (by_ref) {
-        state.stacks.push(stack);
-        return this;
-      } else {
-        var c = build(state);
-        c.state.stacks.push(stack);
-        return c;
-      }
-    };
-
-    return cascade;
+  return function(steps){
+    return _build({ steps: steps });
   };
+})();
 
-  return build(state);
+
+exports['stacks']['image'] = function(url, prefix){
+  if (!prefix) prefix = 'images';
+  return function(ctx, clb) {
+    var image = new Image();
+    image['onload'] = function(){
+      if (!ctx[prefix]) ctx[prefix] = [];
+      image['status'] = 'success';
+      ctx[prefix].push(image);
+      clb(ctx);
+    };
+    image['onerror'] = function(){
+      if (!ctx[prefix]) ctx[prefix] = [];
+      image['status'] = 'error';
+      ctx[prefix].push(image);
+      clb(ctx);
+    };
+    image['onabort'] = function(){
+      if (!ctx[prefix]) ctx[prefix] = [];
+      image['status'] = 'abort';
+      ctx[prefix].push(image);
+      clb(ctx);
+    };
+    image['src'] = url;
+  };
+};
+
+exports['stacks']['images'] = function(urls, prefix){
+  var i, images = [];
+  for (i in urls)
+    images.push(exports['stacks']['image'](urls[i], prefix));
+  return exports['stacks']['parallel'](images);
 };
 
 // <!--[jquery]-->
@@ -257,39 +310,6 @@ exports['stacks']['batch_ajax'] = function(options){
     ajax.push(exports['stacks']['ajax'](opts));
   }
   return exports['stacks']['parallel'](ajax);
-};
-
-exports['stacks']['image'] = function(url, prefix){
-  if (!prefix) prefix = 'images';
-  return function(ctx, clb) {
-    var image = new Image();
-    image['onload'] = function(){
-      if (!ctx[prefix]) ctx[prefix] = [];
-      image['status'] = 'success';
-      ctx[prefix].push(image);
-      clb(ctx);
-    };
-    image['onerror'] = function(){
-      if (!ctx[prefix]) ctx[prefix] = [];
-      image['status'] = 'error';
-      ctx[prefix].push(image);
-      clb(ctx);
-    };
-    image['onabort'] = function(){
-      if (!ctx[prefix]) ctx[prefix] = [];
-      image['status'] = 'abort';
-      ctx[prefix].push(image);
-      clb(ctx);
-    };
-    image['src'] = url;
-  };
-};
-
-exports['stacks']['images'] = function(urls, prefix){
-  var i, images = [];
-  for (i in urls)
-    images.push(exports['stacks']['image'](urls[i], prefix));
-  return exports['stacks']['parallel'](images);
 };
 
 exports['stacks']['preload_image'] = function(image, src_attr){

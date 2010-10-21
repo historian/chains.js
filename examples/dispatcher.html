@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <title>untitled</title>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  <script src="../build/jquery.stacks.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="../build/jquery.dispatcher.min.js" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript" charset="utf-8">
+
+var page_type_disp = $.dispatcher.body(function(){
+  
+  (body)('#failed')
+    (function(ctx, clb){ $('#hello').text("failed"); clb(); })
+    (done);
+  
+  (body)('#succeeded')
+    (function(ctx, clb){ $('#hello').text("succeeded"); clb(); })
+    (done);
+  
+});
+
+$(function(){
+  
+  page_type_disp({});
+  
+});
+
+  </script>
+</head>
+<body id="succeeded">
+
+<div id="hello"></div>
+
+</body>
+</html>
