@@ -4,12 +4,12 @@
   var exports = $;
 
   // export stacks in a property called _stacks_
-  exports.stacks = {};
+  exports['stacks'] = {};
 
   // ### stacks.sync(function)
 
   // `sync(function(ctx){ return ctx; })` turns a non-callback function into a callback function by wrapping it.
-  exports.stacks.sync = function(func){
+  exports['stacks']['sync'] = function(func){
     return function(ctx, clb) {
       clb(func.call(this, ctx));
     };
@@ -19,7 +19,7 @@
   // ### stacks.serial([steps, ...])
 
   // execute a list of steps one after the other.
-  exports.stacks.serial = function(){
+  exports['stacks']['serial'] = function(){
     var state = {};
 
     if ((arguments.length == 1) && (arguments[0] instanceof Array)) {
@@ -66,11 +66,11 @@
 
       serial.state = state;
 
-      serial.toString = function(){
+      serial['toString'] = function(){
         return "serial:["+serial.state.steps.toString()+"]";
       };
 
-      serial.push = function(step){
+      serial['push'] = function(step){
         var s = build(state);
         s.state.steps.push(step);
         return s;
@@ -82,7 +82,11 @@
     return build(state);
   };
 
-  exports.stacks.parallel = function(){
+
+  // ### stacks.parallel([steps, ...])
+
+  // execute a list of steps in parallel.
+  exports['stacks']['parallel'] = function(){
     var steps;
 
     if ((arguments.length == 1) && (arguments[0] instanceof Array)) {
@@ -119,7 +123,10 @@
     };
   };
 
-  exports.stacks.cascade = function(){
+  // ### stacks.cascade([steps, ...])
+
+  // execute a step and only continue to the next step if the previous step call `clb.pass()`.
+  exports['stacks']['cascade'] = function(){
     var state = {};
 
     if ((arguments.length == 1) && (arguments[0] instanceof Array)) {
@@ -135,7 +142,7 @@
       var _clb = function(_ctx){
         continue_chain.call(_this, 'done', _ctx || ctx, clb);
       };
-      _clb.pass = function(_ctx){
+      _clb['pass'] = function(_ctx){
         continue_chain.call(_this, rest, _ctx || ctx, clb);
       };
       stack.call(_this, ctx, _clb);
@@ -145,7 +152,7 @@
       if (rest == 'done') {
         if (clb) { clb.call(this, ctx); }
       } else if (rest.length == 0) {
-        if (clb && clb.pass) { clb.pass(ctx); }
+        if (clb && clb['pass']) { clb['pass'](ctx); }
       } else {
         perform_stack.call(this, rest.shift(), rest, ctx, clb);
       }
@@ -164,11 +171,11 @@
 
       cascade.state = state;
 
-      cascade.toString = function(){
+      cascade['toString'] = function(){
         return "cascade:["+cascade.state.stacks.toString()+"]";
       };
 
-      cascade.push = function(stack, by_ref){
+      cascade['push'] = function(stack, by_ref){
         if (by_ref) {
           state.stacks.push(stack);
           return this;
@@ -191,26 +198,26 @@
   // ### stacks.ajax(options)
 
   // perform an AJAX request.
-  exports.stacks.ajax = function(options){
-    var key = options.key || 'response';
+  exports['stacks']['ajax'] = function(options){
+    var key = options['key'] || 'response';
     delete options['key'];
     return function(ctx, clb) {
       $.extend(options, {
-        success: function(data, textStatus, XMLHttpRequest){
+        'success': function(data, textStatus, XMLHttpRequest){
           ctx[key] = {
-            success:        true,
-            data:           data,
-            textStatus:     textStatus,
-            XMLHttpRequest: XMLHttpRequest
+            'success':        true,
+            'data':           data,
+            'textStatus':     textStatus,
+            'XMLHttpRequest': XMLHttpRequest
           };
           clb(ctx);
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
+        'error': function(XMLHttpRequest, textStatus, errorThrown){
           ctx[key] = {
-            success:        false,
-            errorThrown:    errorThrown,
-            textStatus:     textStatus,
-            XMLHttpRequest: XMLHttpRequest
+            'success':        false,
+            'errorThrown':    errorThrown,
+            'textStatus':     textStatus,
+            'XMLHttpRequest': XMLHttpRequest
           };
           clb(ctx);
         }
@@ -219,35 +226,35 @@
     };
   };
 
-  exports.stacks.batch_ajax = function(options){
+  exports['stacks']['batch_ajax'] = function(options){
     var key, opts, ajax = [];
     for(key in options) {
       opts = options[key];
       opts.key = key;
-      ajax.push(exports.stacks.ajax(opts));
+      ajax.push(exports['stacks']['ajax'](opts));
     }
-    return exports.stacks.parallel(ajax);
+    return exports['stacks']['parallel'](ajax);
   };
 
-  exports.stacks.image = function(url, prefix){
+  exports['stacks']['image'] = function(url, prefix){
     if (!prefix) prefix = 'images';
     return function(ctx, clb) {
       var image = new Image();
       image.onload = function(){
         if (!ctx[prefix]) ctx[prefix] = [];
-        image.status = 'success';
+        image['status'] = 'success';
         ctx[prefix].push(image);
         clb(ctx);
       };
       image.onerror = function(){
         if (!ctx[prefix]) ctx[prefix] = [];
-        image.status = 'error';
+        image['status'] = 'error';
         ctx[prefix].push(image);
         clb(ctx);
       };
       image.onabort = function(){
         if (!ctx[prefix]) ctx[prefix] = [];
-        image.status = 'abort';
+        image['status'] = 'abort';
         ctx[prefix].push(image);
         clb(ctx);
       };
@@ -255,47 +262,47 @@
     };
   };
 
-  exports.stacks.images = function(urls, prefix){
+  exports['stacks']['images'] = function(urls, prefix){
     var i, images = [];
     for (i in urls)
-      images.push(exports.stacks.image(urls[i], prefix));
-    return exports.stacks.parallel(images);
+      images.push(exports['stacks']['image'](urls[i], prefix));
+    return exports['stacks']['parallel'](images);
   };
 
-  exports.stacks.preload_image = function(image, src_attr){
+  exports['stacks']['preload_image'] = function(image, src_attr){
     if (!src_attr) src_attr = 'data-src';
     return function(ctx, clb) {
       var $image = $(image),
           url    = $image.attr(src_attr);
       image.onload = function(){
-        image.status = 'success';
+        image['status'] = 'success';
         clb(ctx);
       };
       image.onerror = function(){
-        image.status = 'error';
+        image['status'] = 'error';
         clb(ctx);
       };
       image.onabort = function(){
-        image.status = 'abort';
+        image['status'] = 'abort';
         clb(ctx);
       };
       image.src = url;
     };
   };
 
-  exports.stacks.preload_images = function(container, src_attr, after){
+  exports['stacks']['preload_images'] = function(container, src_attr, after){
     if (!src_attr) src_attr = 'data-src';
     var images = $(container).find('img['+src_attr+']'), tasks=[], task;
     images.each(function(){
-      task = exports.stacks.preload_image(this, src_attr);
+      task = exports['stacks']['preload_image'](this, src_attr);
 
       if (after) {
-        task = exports.stacks.serial([ task, after ]);
+        task = exports['stacks']['serial']([ task, after ]);
       }
 
       tasks.push(task);
     });
-    return exports.stacks.parallel(tasks);
+    return exports['stacks']['parallel'](tasks);
   };
 
 })(jQuery);

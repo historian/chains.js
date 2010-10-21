@@ -2,12 +2,12 @@
 (function(exports){
 
   // export stacks in a property called _stacks_
-  exports.stacks = {};
+  exports['stacks'] = {};
 
   // ### stacks.sync(function)
 
   // `sync(function(ctx){ return ctx; })` turns a non-callback function into a callback function by wrapping it.
-  exports.stacks.sync = function(func){
+  exports['stacks']['sync'] = function(func){
     return function(ctx, clb) {
       clb(func.call(this, ctx));
     };
@@ -17,7 +17,7 @@
   // ### stacks.serial([steps, ...])
 
   // execute a list of steps one after the other.
-  exports.stacks.serial = function(){
+  exports['stacks']['serial'] = function(){
     var state = {};
 
     if ((arguments.length == 1) && (arguments[0] instanceof Array)) {
@@ -64,11 +64,11 @@
 
       serial.state = state;
 
-      serial.toString = function(){
+      serial['toString'] = function(){
         return "serial:["+serial.state.steps.toString()+"]";
       };
 
-      serial.push = function(step){
+      serial['push'] = function(step){
         var s = build(state);
         s.state.steps.push(step);
         return s;
@@ -80,7 +80,11 @@
     return build(state);
   };
 
-  exports.stacks.parallel = function(){
+
+  // ### stacks.parallel([steps, ...])
+
+  // execute a list of steps in parallel.
+  exports['stacks']['parallel'] = function(){
     var steps;
 
     if ((arguments.length == 1) && (arguments[0] instanceof Array)) {
@@ -117,7 +121,10 @@
     };
   };
 
-  exports.stacks.cascade = function(){
+  // ### stacks.cascade([steps, ...])
+
+  // execute a step and only continue to the next step if the previous step call `clb.pass()`.
+  exports['stacks']['cascade'] = function(){
     var state = {};
 
     if ((arguments.length == 1) && (arguments[0] instanceof Array)) {
@@ -133,7 +140,7 @@
       var _clb = function(_ctx){
         continue_chain.call(_this, 'done', _ctx || ctx, clb);
       };
-      _clb.pass = function(_ctx){
+      _clb['pass'] = function(_ctx){
         continue_chain.call(_this, rest, _ctx || ctx, clb);
       };
       stack.call(_this, ctx, _clb);
@@ -143,7 +150,7 @@
       if (rest == 'done') {
         if (clb) { clb.call(this, ctx); }
       } else if (rest.length == 0) {
-        if (clb && clb.pass) { clb.pass(ctx); }
+        if (clb && clb['pass']) { clb['pass'](ctx); }
       } else {
         perform_stack.call(this, rest.shift(), rest, ctx, clb);
       }
@@ -162,11 +169,11 @@
 
       cascade.state = state;
 
-      cascade.toString = function(){
+      cascade['toString'] = function(){
         return "cascade:["+cascade.state.stacks.toString()+"]";
       };
 
-      cascade.push = function(stack, by_ref){
+      cascade['push'] = function(stack, by_ref){
         if (by_ref) {
           state.stacks.push(stack);
           return this;

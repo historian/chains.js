@@ -25,11 +25,14 @@ task :build do
       File.open(File.join('build', name), 'w+') do |f|
         f.write target
       end
+      
+      # --externs
+      sh "closure --compilation_level ADVANCED_OPTIMIZATIONS --js_output_file #{File.join('build', name.sub(/\.js$/, '.min.js'))} --js #{File.join('build', name)} "
     end
   end
 end
 
 desc "Build the docco documentation"
 task :doc do
-  sh "docco " + Dir.glob('./src/*.js').join(' ')
+  sh "docco src/*.js"
 end
