@@ -23,7 +23,7 @@ var p = $.stacks.parallel([
   function(e, c){ $('#hello').append("<p>step 3</p>"); work(e,c); }
 ]);
 
-var images = $.stacks.serial(
+var images = $.stacks.serial([
   $.stacks.images([
     'http://farm3.static.flickr.com/2015/2192412382_a09e92b387_z_d.jpg',
     'http://farm4.static.flickr.com/3485/3839571633_51f41b964c_b.jpg',
@@ -31,11 +31,10 @@ var images = $.stacks.serial(
     'http://farm4.static.flickr.com/3255/3211707797_954a32822f_b.jpg'
   ]),
   function(e, clb){
-    console.log(e);
     $('#images').append(e.images);
     clb(e);
   }
-);
+]);
 
 $(function(){
   
@@ -46,13 +45,11 @@ $(function(){
     $('#hello').append('<h3>Parallel</h3>');
     p.call(this, new Date().getTime(), function(e){
       $('#hello').append('<p>took ' +  (new Date().getTime() - e) + ' miliseconds.</p>');
+      
+      $('#hello').append('<h3>Images</h3>');
+      images({});
     });
-    
-    images({});
   });
-  
-  
-  
 });
 
   </script>
