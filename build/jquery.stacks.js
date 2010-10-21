@@ -268,25 +268,25 @@
     if (!prefix) prefix = 'images';
     return function(ctx, clb) {
       var image = new Image();
-      image.onload = function(){
+      image['onload'] = function(){
         if (!ctx[prefix]) ctx[prefix] = [];
         image['status'] = 'success';
         ctx[prefix].push(image);
         clb(ctx);
       };
-      image.onerror = function(){
+      image['onerror'] = function(){
         if (!ctx[prefix]) ctx[prefix] = [];
         image['status'] = 'error';
         ctx[prefix].push(image);
         clb(ctx);
       };
-      image.onabort = function(){
+      image['onabort'] = function(){
         if (!ctx[prefix]) ctx[prefix] = [];
         image['status'] = 'abort';
         ctx[prefix].push(image);
         clb(ctx);
       };
-      image.src = url;
+      image['src'] = url;
     };
   };
 
@@ -302,19 +302,19 @@
     return function(ctx, clb) {
       var $image = $(image),
           url    = $image.attr(src_attr);
-      image.onload = function(){
+      image['onload'] = function(){
         image['status'] = 'success';
         clb(ctx);
       };
-      image.onerror = function(){
+      image['onerror'] = function(){
         image['status'] = 'error';
         clb(ctx);
       };
-      image.onabort = function(){
+      image['onabort'] = function(){
         image['status'] = 'abort';
         clb(ctx);
       };
-      image.src = url;
+      image['src'] = url;
     };
   };
 
