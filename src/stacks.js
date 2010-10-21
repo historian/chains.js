@@ -1,3 +1,4 @@
+var build_callback;
 
 // export stacks in a property called _stacks_
 exports['stacks'] = {};
@@ -15,109 +16,135 @@ exports['stacks']['sync'] = function(func){
 // ### stacks.serial([steps, ...])
 
 // execute a list of steps one after the other.
-exports['stacks']['serial'] = function(){
-  var state = {};
-
-  if ((arguments.length == 1) && (arguments[0] instanceof Array)) {
-    state.steps = arguments[0];
-  } else {
-    state.steps = Array.prototype.slice.call(arguments, 0);
-  }
-
-  var perform_step, continue_chain;
-
-  perform_step = function(step, rest, ctx, clb) {
-    var _this = this;
-    var _clb = function(_ctx){
-      continue_chain.call(_this, rest, _ctx || ctx, clb);
-    };
-    _clb.pass = function(_ctx){
-      if (clb || clb.pass) {
-        clb.pass(_ctx || ctx);
-      } else {
-        continue_chain.call(_this, [], _ctx || ctx, clb);
+exports['stacks']['serial'] = (function(){
+  var _perform_step, _build, _toString, _push;
+  
+  // execute a step.
+  _perform_step = function(state) {
+    if (state.steps.length == 0) {
+      if (state.clb) {
+        state.clb.call(this, state.ctx);
       }
-    };
-    step.call(_this, ctx, _clb);
-  };
-
-  continue_chain = function(rest, ctx, clb) {
-    if (rest.length == 0) {
-      if (clb) { clb.call(this, ctx); }
+      
     } else {
-      perform_step.call(this, rest.shift(), rest, ctx, clb);
+      var step = state.steps.shift();
+      
+      var _clb = build_callback(this, state, function(state){
+        if (!state.pass) {
+          _perform_step.call(this, state);
+        } else {
+          state.steps = [];
+          _perform_step.call(this, state);
+        }
+      });
+      
+      step.call(this, state.ctx, _clb);
     }
   };
-
-  var build;
-  build = function(_state){
-    var state = {steps:[]};
-    for (i in _state.steps) { state.steps[i] = _state.steps[i]; }
-
-    var serial = function(ctx, clb){
-      var _steps = [], i;
-      for (i in state.steps) { _steps.push(state.steps[i]); }
-      continue_chain.call(this, _steps, ctx, clb);
+  
+  // build a serial.
+  _build = function(class_state){
+    var serial, state = { steps: [] };
+    for (i in _state.steps) {
+      state.steps[i] = class_state.steps[i];
+    }
+  
+    serial = function(ctx, clb){
+      var instance_state = { steps: [], ctx: ctx, clb: clb }, i;
+      
+      for (i in state.steps) {
+        instance_state.steps[i] = state.steps[i];
+      }
+      
+      _perform_step.call(this, instance_state);
     };
-
-    serial.state = state;
-
-    serial['toString'] = function(){
-      return "serial:["+serial.state.steps.toString()+"]";
-    };
-
-    serial['push'] = function(step){
-      var s = build(state);
-      s.state.steps.push(step);
-      return s;
-    };
-
+  
+    serial.state       = state;
+    serial['toString'] = _toString
+    serial['push']     = _push;
+  
     return serial;
   };
-
-  return build(state);
-};
+  
+  // custom to toString()
+  _toString = function(){
+    return "serial:["+this.state.steps.toString()+"]";
+  };
+  
+  // allow pushing a new step to the _serial_
+  _push = function(step){
+    var s = _build(this.state);
+    s.state.steps.push(step);
+    return s;
+  };
+  
+  // The constructor. `steps` is an array of functions.
+  return function(steps){
+    return _build({ steps: steps });
+  };
+})();
 
 
 // ### stacks.parallel([steps, ...])
 
 // execute a list of steps in parallel.
-exports['stacks']['parallel'] = function(){
-  var steps;
+exports['stacks']['parallel'] = (function(){
+  var _perform_step, _build, _toString, _push;
 
-  if ((arguments.length == 1) && (arguments[0] instanceof Array)) {
-    steps = arguments[0];
-  } else {
-    steps = Array.prototype.slice.call(arguments, 0);
-  }
-
-  var emit_step = function(steps, step_id, ctx, clb){
-    var _this = this;
-    steps[step_id].call(_this, ctx, function(){
-      delete steps[step_id];
-      steps.length -= 1;
-
-      if ((steps.length <= 0) && (clb)) {
-        clb.call(_this, ctx, clb);
+  _perform_step = function(step, state){
+    var _clb = build_callback(this, state, function(state){
+      state.length -= 1;
+      
+      if (state.length == 0) {
+        if (state.clb) {
+          state.clb.call(this, state.ctx);
+        }
       }
     });
+    
+    step.call(this, state.ctx, _clb);
   };
-
-  var emit_steps = function(steps, ctx, clb){
-    var step, i;
-    for(i in steps) {
-      if (i != 'length')
-        emit_step.call(this, steps, i, ctx, clb);
+  
+  _build = function(class_state){
+    var parallel, state = { steps: [] };
+    for (i in _state.steps) {
+      state.steps[i] = class_state.steps[i];
     }
+    
+    parallel = function(ctx, clb){
+      var instance_state = { steps: {}, ctx: ctx, clb: clb }, step, i;
+      
+      instance_state.length = state.steps.length;
+      for (i in state.steps) {
+        instance_state.steps[i] = state.steps[i];
+      }
+      
+      for(i in instance_state.steps) {
+        _perform_step.call(this, instance_state.steps[i], instance_state);
+      }
+    };
+  
+    parallel.state       = state;
+    parallel['toString'] = _toString
+    parallel['push']     = _push;
+    
+    return parallel;
   };
-
-  return function(ctx, clb){
-    var _steps = {}, i;
-    _steps.length = steps.length;
-    for (i in steps) { _steps[i] = steps[i]; }
-    emit_steps.call(this, _steps, ctx, clb);
+  
+  _toString = function(){
+    return "parallel:["+this.state.steps.toString()+"]";
   };
-};
+  
+  _push = function(step){
+    var s = _build(this.state);
+    s.state.steps.push(step);
+    return s;
+  };
+  
+  return function(steps){
+    return _build({ steps: steps });
+  };
+})();
 
 // ### stacks.cascade([steps, ...])
 
@@ -301,3 +328,25 @@ exports['stacks']['preload_images'] = function(container, src_attr, after){
   return exports['stacks']['parallel'](tasks);
 };
 // <!--[jquery]-->
+
+
+build_callback = function(_this, _state, _done){
+  var _clb = function(_ctx){
+    _state.ctx  = _ctx || _state.ctx;
+    _state.pass = false;
+    _done.call(_this, _state);
+  };
+  
+  _clb['pass'] = function(_ctx){
+    _state.ctx  = _ctx || _state.ctx;
+    _state.pass = true;
+    if (_state.clb && _state.clb['pass']) {
+      _state.clb['pass'](_state.ctx);
+    } else {
+      _done.call(_this, _state);
+    }
+  };
+  
+  return _clb;
+};
+
