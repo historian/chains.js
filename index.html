@@ -6,25 +6,25 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <title>untitled</title>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-  <script src="build/jquery.chains.js" type="text/javascript" charset="utf-8"></script>
+  <script src="build/jquery.stacks.js" type="text/javascript" charset="utf-8"></script>
   <script type="text/javascript" charset="utf-8">
 
 var work = function(e, c) { setTimeout(function(){ c(e); }, 1000); };
 
-var c = $.chains.serial([
+var c = $.stacks.serial([
   function(e, c){ $('#hello').append("<p>step 1</p>"); work(e,c); },
   function(e, c){ $('#hello').append("<p>step 2</p>"); work(e,c); },
   function(e, c){ $('#hello').append("<p>step 3</p>"); work(e,c); }
 ]);
 
-var p = $.chains.parallel([
+var p = $.stacks.parallel([
   function(e, c){ $('#hello').append("<p>step 1</p>"); work(e,c); },
   function(e, c){ $('#hello').append("<p>step 2</p>"); work(e,c); },
   function(e, c){ $('#hello').append("<p>step 3</p>"); work(e,c); }
 ]);
 
-var images = $.chains.serial(
-  $.chains.images([
+var images = $.stacks.serial(
+  $.stacks.images([
     'http://farm3.static.flickr.com/2015/2192412382_a09e92b387_z_d.jpg?zz=1',
     'http://farm4.static.flickr.com/3485/3839571633_51f41b964c_b.jpg',
     'http://farm3.static.flickr.com/2136/2188207036_9fa2212f58_b_d.jpg',
