@@ -48,7 +48,7 @@
     // build a serial.
     _build = function(class_state){
       var serial, state = { steps: [] };
-      for (i in _state.steps) {
+      for (i in class_state.steps) {
         state.steps[i] = class_state.steps[i];
       }
 
@@ -110,7 +110,7 @@
 
     _build = function(class_state){
       var parallel, state = { steps: [] };
-      for (i in _state.steps) {
+      for (i in class_state.steps) {
         state.steps[i] = class_state.steps[i];
       }
 
