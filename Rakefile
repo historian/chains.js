@@ -27,7 +27,7 @@ task :build do
       end
       
       # --externs
-      sh "closure --compilation_level ADVANCED_OPTIMIZATIONS --js_output_file #{File.join('build', name.sub(/\.js$/, '.min.js'))} --js #{File.join('build', name)} "
+      sh "closure --compilation_level SIMPLE_OPTIMIZATIONS --js_output_file #{File.join('build', name.sub(/\.js$/, '.min.js'))} --js #{File.join('build', name)} "
     end
   end
 end

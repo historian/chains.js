@@ -1,12 +1,12 @@
 var build_callback;
 
 // export stacks in a property called _stacks_
-exports['stacks'] = {};
+exports.stacks = {};
 
 // ### stacks.sync(function)
 
 // `sync(function(ctx){ return ctx; })` turns a non-callback function into a callback function by wrapping it.
-exports['stacks']['sync'] = function(func){
+exports.stacks.sync = function(func){
   return function(ctx, clb) {
     clb(func.call(this, ctx));
   };
@@ -16,7 +16,7 @@ exports['stacks']['sync'] = function(func){
 // ### stacks.serial([steps, ...])
 
 // execute a list of steps one after the other.
-exports['stacks']['serial'] = (function(){
+exports.stacks.serial = (function(){
   var _perform_step, _build, _toString, _push, _call;
   
   // execute a step.
@@ -50,8 +50,8 @@ exports['stacks']['serial'] = (function(){
     };
   
     serial.state       = { steps: [] };
-    serial['toString'] = _toString
-    serial['push']     = _push;
+    serial.toString = _toString
+    serial.push     = _push;
     
     for (i in class_state.steps) {
       serial.state.steps[i] = class_state.steps[i];
@@ -92,7 +92,7 @@ exports['stacks']['serial'] = (function(){
 // ### stacks.parallel([steps, ...])
 
 // execute a list of steps in parallel.
-exports['stacks']['parallel'] = (function(){
+exports.stacks.parallel = (function(){
   var _perform_step, _build, _toString, _push, _call;
 
   _perform_step = function(step, state){
@@ -116,8 +116,8 @@ exports['stacks']['parallel'] = (function(){
     };
   
     parallel.state       = { steps: [] };
-    parallel['toString'] = _toString
-    parallel['push']     = _push;
+    parallel.toString = _toString
+    parallel.push     = _push;
     
     for (i in class_state.steps) {
       parallel.state.steps[i] = class_state.steps[i];
@@ -157,7 +157,7 @@ exports['stacks']['parallel'] = (function(){
 // ### stacks.cascade([steps, ...])
 
 // execute a step and only continue to the next step if the previous step call `clb.pass()`.
-exports['stacks']['cascade'] = (function(){
+exports.stacks.cascade = (function(){
   var _build, _toString, _push, _call, _perform_step;
 
   _perform_step = function(state) {
@@ -167,8 +167,8 @@ exports['stacks']['cascade'] = (function(){
       }
       
     } else if (state.steps.length == 0) {
-      if (state.clb && state.clb['pass']) {
-        state.clb['pass'](state.ctx);
+      if (state.clb && state.clb.pass) {
+        state.clb.pass(state.ctx);
       }
       
     } else {
@@ -194,8 +194,8 @@ exports['stacks']['cascade'] = (function(){
     };
 
     cascade.state       = { steps: [] };
-    cascade['toString'] = _toString;
-    cascade['push']     = _push;
+    cascade.toString = _toString;
+    cascade.push     = _push;
     
     for (i in class_state.steps) {
       cascade.state.steps[i] = class_state.steps[i];
@@ -235,37 +235,37 @@ exports['stacks']['cascade'] = (function(){
 })();
 
 
-exports['stacks']['image'] = function(url, prefix){
+exports.stacks.image = function(url, prefix){
   if (!prefix) prefix = 'images';
   return function(ctx, clb) {
     var image = new Image();
-    image['onload'] = function(){
+    image.onload = function(){
       if (!ctx[prefix]) ctx[prefix] = [];
-      image['status'] = 'success';
+      image.status = 'success';
       ctx[prefix].push(image);
       clb(ctx);
     };
-    image['onerror'] = function(){
+    image.onerror = function(){
       if (!ctx[prefix]) ctx[prefix] = [];
-      image['status'] = 'error';
+      image.status = 'error';
       ctx[prefix].push(image);
       clb(ctx);
     };
-    image['onabort'] = function(){
+    image.onabort = function(){
       if (!ctx[prefix]) ctx[prefix] = [];
-      image['status'] = 'abort';
+      image.status = 'abort';
       ctx[prefix].push(image);
       clb(ctx);
     };
-    image['src'] = url;
+    image.src = url;
   };
 };
 
-exports['stacks']['images'] = function(urls, prefix){
+exports.stacks.images = function(urls, prefix){
   var i, images = [];
   for (i in urls)
-    images.push(exports['stacks']['image'](urls[i], prefix));
-  return exports['stacks']['parallel'](images);
+    images.push(exports.stacks.image(urls[i], prefix));
+  return exports.stacks.parallel(images);
 };
 
 // <!--[jquery]-->
@@ -274,9 +274,9 @@ exports['stacks']['images'] = function(urls, prefix){
 // ### stacks.ajax(options)
 
 // perform an AJAX request.
-exports['stacks']['ajax'] = function(options){
-  var key = options['key'] || 'response';
-  delete options['key'];
+exports.stacks.ajax = function(options){
+  var key = options.key || 'response';
+  delete options.key;
   return function(ctx, clb) {
     $.extend(options, {
       'success': function(data, textStatus, XMLHttpRequest){
@@ -302,50 +302,50 @@ exports['stacks']['ajax'] = function(options){
   };
 };
 
-exports['stacks']['batch_ajax'] = function(options){
+exports.stacks.batch_ajax = function(options){
   var key, opts, ajax = [];
   for(key in options) {
     opts = options[key];
     opts.key = key;
-    ajax.push(exports['stacks']['ajax'](opts));
+    ajax.push(exports.stacks.ajax(opts));
   }
-  return exports['stacks']['parallel'](ajax);
+  return exports.stacks.parallel(ajax);
 };
 
-exports['stacks']['preload_image'] = function(image, src_attr){
+exports.stacks.preload_image = function(image, src_attr){
   if (!src_attr) src_attr = 'data-src';
   return function(ctx, clb) {
     var $image = $(image),
         url    = $image.attr(src_attr);
-    image['onload'] = function(){
-      image['status'] = 'success';
+    image.onload = function(){
+      image.status = 'success';
       clb(ctx);
     };
-    image['onerror'] = function(){
-      image['status'] = 'error';
+    image.onerror = function(){
+      image.status = 'error';
       clb(ctx);
     };
-    image['onabort'] = function(){
-      image['status'] = 'abort';
+    image.onabort = function(){
+      image.status = 'abort';
       clb(ctx);
     };
-    image['src'] = url;
+    image.src = url;
   };
 };
 
-exports['stacks']['preload_images'] = function(container, src_attr, after){
+exports.stacks.preload_images = function(container, src_attr, after){
   if (!src_attr) src_attr = 'data-src';
-  var images = $(container).find('img['+src_attr+']'), tasks=[], task;
+  var images = $(container).find('img.+src_attr+'), tasks=[], task;
   images.each(function(){
-    task = exports['stacks']['preload_image'](this, src_attr);
+    task = exports.stacks.preload_image(this, src_attr);
 
     if (after) {
-      task = exports['stacks']['serial']([ task, after ]);
+      task = exports.stacks.serial([ task, after ]);
     }
 
     tasks.push(task);
   });
-  return exports['stacks']['parallel'](tasks);
+  return exports.stacks.parallel(tasks);
 };
 // <!--[jquery]-->
 
@@ -357,11 +357,11 @@ build_callback = function(_this, _state, _done){
     _done.call(_this, _state);
   };
   
-  _clb['pass'] = function(_ctx){
+  _clb.pass = function(_ctx){
     _state.ctx  = _ctx || _state.ctx;
     _state.pass = true;
-    if (_state.clb && _state.clb['pass']) {
-      _state.clb['pass'](_state.ctx);
+    if (_state.clb && _state.clb.pass) {
+      _state.clb.pass(_state.ctx);
     } else {
       _done.call(_this, _state);
     }
