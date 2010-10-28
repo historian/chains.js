@@ -1,4 +1,4 @@
-var build_callback;
+var build_callback, wrap_step;
 
 // export stacks in a property called _stacks_
 exports.stacks = {};
@@ -13,22 +13,28 @@ exports.stacks.sync = function(func){
 };
 
 
+exports.stacks.fallback = function(func, fallback){
+  func.fallback = fallback;
+  return func;
+};
+
+
 // ### stacks.serial([steps, ...])
 
 // execute a list of steps one after the other.
 exports.stacks.serial = (function(){
   var _perform_step, _build, _toString, _push, _call;
-  
+
   // execute a step.
   _perform_step = function(state) {
     if (state.steps.length == 0) {
       if (state.clb) {
         state.clb.call(this, state.ctx);
       }
-      
+
     } else {
       var step = state.steps.shift();
-      
+
       var _clb = build_callback(this, state, function(state){
         if (!state.pass) {
           _perform_step.call(this, state);
@@ -37,51 +43,51 @@ exports.stacks.serial = (function(){
           _perform_step.call(this, state);
         }
       });
-      
+
       step.call(this, state.ctx, _clb);
     }
   };
-  
+
   // build a serial.
   _build = function(class_state){
     var serial = function(ctx, clb){
       var class_state = arguments.callee.state;
       _call.call(this, class_state, ctx, clb);
     };
-  
-    serial.state       = { steps: [] };
+
+    serial.state    = { steps: [] };
     serial.toString = _toString
     serial.push     = _push;
-    
+
     for (i in class_state.steps) {
       serial.state.steps[i] = class_state.steps[i];
     }
-  
+
     return serial;
   };
-  
+
   _call = function(class_state, ctx, clb){
     var instance_state = { steps: [], ctx: ctx, clb: clb }, i;
-    
+
     for (i in class_state.steps) {
-      instance_state.steps[i] = class_state.steps[i];
+      instance_state.steps[i] = wrap_step(class_state.steps[i]);
     }
-    
+
     _perform_step.call(this, instance_state);
   };
-  
+
   // custom to toString()
   _toString = function(){
     return "serial:["+this.state.steps.toString()+"]";
   };
-  
+
   // allow pushing a new step to the _serial_
   _push = function(step){
     var s = _build(this.state);
     s.state.steps.push(step);
     return s;
   };
-  
+
   // The constructor. `steps` is an array of functions.
   return function(steps){
     return _build({ steps: steps });
@@ -98,57 +104,57 @@ exports.stacks.parallel = (function(){
   _perform_step = function(step, state){
     var _clb = build_callback(this, state, function(state){
       state.length -= 1;
-      
+
       if (state.length == 0) {
         if (state.clb) {
           state.clb.call(this, state.ctx);
         }
       }
     });
-    
+
     step.call(this, state.ctx, _clb);
   };
-  
+
   _build = function(class_state){
     var parallel = function(ctx, clb){
       var class_state = arguments.callee.state;
       _call.call(this, class_state, ctx, clb);
     };
-  
+
     parallel.state       = { steps: [] };
     parallel.toString = _toString
     parallel.push     = _push;
-    
+
     for (i in class_state.steps) {
       parallel.state.steps[i] = class_state.steps[i];
     }
-    
+
     return parallel;
   };
-  
+
   _call = function(class_state, ctx, clb){
     var instance_state = { steps: {}, ctx: ctx, clb: clb }, step, i;
-    
+
     instance_state.length = class_state.steps.length;
     for (i in class_state.steps) {
-      instance_state.steps[i] = class_state.steps[i];
+      instance_state.steps[i] = wrap_step(class_state.steps[i]);
     }
-    
+
     for(i in instance_state.steps) {
       _perform_step.call(this, instance_state.steps[i], instance_state);
     }
   };
-  
+
   _toString = function(){
     return "parallel:["+this.state.steps.toString()+"]";
   };
-  
+
   _push = function(step){
     var s = _build(this.state);
     s.state.steps.push(step);
     return s;
   };
-  
+
   return function(steps){
     return _build({ steps: steps });
   };
@@ -165,15 +171,15 @@ exports.stacks.cascade = (function(){
       if (state.clb) {
         state.clb.call(this, state.ctx);
       }
-      
+
     } else if (state.steps.length == 0) {
       if (state.clb && state.clb.pass) {
         state.clb.pass(state.ctx);
       }
-      
+
     } else {
       var step = state.steps.shift();
-      
+
       var _clb = build_callback(this, state, function(state){
         if (!state.pass) {
           state.done = true;
@@ -182,11 +188,11 @@ exports.stacks.cascade = (function(){
           _perform_step.call(this, state);
         }
       });
-      
+
       step.call(this, state.ctx, _clb);
     }
   };
-  
+
   _build = function(class_state){
     var cascade = function(ctx, clb){
       var class_state = arguments.callee.state;
@@ -196,28 +202,28 @@ exports.stacks.cascade = (function(){
     cascade.state       = { steps: [] };
     cascade.toString = _toString;
     cascade.push     = _push;
-    
+
     for (i in class_state.steps) {
       cascade.state.steps[i] = class_state.steps[i];
     }
-    
+
     return cascade;
   };
-  
+
   _call = function(class_state, ctx, clb){
     var instance_state = { steps: [], ctx: ctx, clb: clb, done: false }, i;
-    
+
     for (i in class_state.steps) {
-      instance_state.steps[i] = class_state.steps[i];
+      instance_state.steps[i] = wrap_step(class_state.steps[i]);
     }
-    
+
     _perform_step.call(this, instance_state);
   };
 
   _toString = function(){
     return "cascade:["+this.state.steps.toString()+"]";
   };
-  
+
   _push = function(step, by_ref){
     if (by_ref) {
       this.state.steps.push(step);
@@ -335,7 +341,7 @@ exports.stacks.preload_image = function(image, src_attr){
 
 exports.stacks.preload_images = function(container, src_attr, after){
   if (!src_attr) src_attr = 'data-src';
-  var images = $(container).find('img.+src_attr+'), tasks=[], task;
+  var images = $(container).find('img['+src_attr+']'), tasks=[], task;
   images.each(function(){
     task = exports.stacks.preload_image(this, src_attr);
 
@@ -356,7 +362,7 @@ build_callback = function(_this, _state, _done){
     _state.pass = false;
     _done.call(_this, _state);
   };
-  
+
   _clb.pass = function(_ctx){
     _state.ctx  = _ctx || _state.ctx;
     _state.pass = true;
@@ -366,7 +372,33 @@ build_callback = function(_this, _state, _done){
       _done.call(_this, _state);
     }
   };
-  
+
   return _clb;
 };
 
+
+wrap_step = function(step, internal){
+  return function(ctx, clb){
+    try {
+      return step.call(this, ctx, clb);
+    } catch (e) {
+
+      if (internal) {
+        internal();
+      }
+
+      if (console && console.log) {
+        console.log(e);
+      }
+
+      if (step.fallback) {
+        if (!ctx.errors) {
+          ctx.errors = [];
+        }
+        ctx.errors.push(e);
+        step.fallback(ctx);
+      }
+
+    }
+  };
+};
