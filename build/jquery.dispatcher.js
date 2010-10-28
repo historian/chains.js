@@ -5,7 +5,7 @@
 
   var _kernel = function(dispatcher, stack){
     if (!stack) {
-      stack = exports['stacks']['serial']([]);
+      stack = exports.stacks.serial([]);
     }
 
     return function(func){
@@ -14,7 +14,7 @@
       } else if (func._wrap) {
         return function(){
           var args = Array.prototype.slice.call(arguments, 0);
-          return func['exec'](dispatcher, [stack].concat(args));
+          return func.exec(dispatcher, [stack].concat(args));
         };
       } else if (func._disp) {
         return function(){
@@ -22,7 +22,7 @@
           return func.apply(dispatcher, [stack].concat(args));
         };
       } else {
-        return dispatcher['kernel'](stack.push(func));
+        return dispatcher.kernel(stack.push(func));
       }
     };
   };
@@ -57,7 +57,7 @@
     wrapper._wrap = true;
     wrapper.dispatcher = dispatcher;
     wrapper.helper = helper
-    wrapper['exec'] = function(t, args){
+    wrapper.exec = function(t, args){
       return this.helper.apply(t, args);
     };
 
@@ -73,7 +73,7 @@
   };
 
   var _construct_dispatcher = function(helpers, def){
-    var dispatcher = exports['stacks']['cascade']([]);
+    var dispatcher = exports.stacks.cascade([]);
     var kernel = function(stack){
       var disp = arguments.callee.dispatcher;
       return _kernel(disp, stack);
@@ -81,7 +81,7 @@
 
     kernel.dispatcher = dispatcher;
 
-    dispatcher['kernel'] = kernel;
+    dispatcher.kernel = kernel;
 
     _wrap_helpers(dispatcher, helpers);
 
@@ -103,7 +103,7 @@
     return dispatcher_class;
   };
 
-  exports['dispatcher'] = function(parent, helpers){
+  exports.dispatcher = function(parent, helpers){
     if (!helpers) {
       helpers = parent;
       parent = undefined;
@@ -126,38 +126,38 @@
     return _define_dispatcher_class(all_helpers);
   };
 
-  var dispatcher = exports['dispatcher'];
+  var dispatcher = exports.dispatcher;
 
-  exports['dispatcher']['http'] = dispatcher({
+  exports.dispatcher.http = dispatcher({
     'method': function(stack, method) {
-      return (this['kernel'])(stack.push(function(ctx, clb){
+      return (this.kernel)(stack.push(function(ctx, clb){
         if (e.method == method) { clb(ctx); }
-        else { clb['pass'](ctx); }
+        else { clb.pass(ctx); }
       }));
     },
     'path': function(stack, path) {
-      return (this['kernel'])(stack.push(function(ctx, clb){
+      return (this.kernel)(stack.push(function(ctx, clb){
         if (e.path == path) { clb(ctx); }
-        else { clb['pass'](ctx); }
+        else { clb.pass(ctx); }
       }));
     },
     'host': function(stack, host) {
-      return (this['kernel'])(stack.push(function(ctx, clb){
+      return (this.kernel)(stack.push(function(ctx, clb){
         if (e.host == host) { clb(ctx); }
-        else { clb['pass'](ctx); }
+        else { clb.pass(ctx); }
       }));
     },
     'get': function(stack, path){
-      return (this['kernel'])(stack)(this.method)('get')(this.path)(path);
+      return (this.kernel)(stack)(this.method)('get')(this.path)(path);
     },
     'post': function(stack, path){
-      return (this['kernel'])(stack)(this.method)('post')(this.path)(path);
+      return (this.kernel)(stack)(this.method)('post')(this.path)(path);
     },
     'put': function(stack, path){
-      return (this['kernel'])(stack)(this.method)('put')(this.path)(path);
+      return (this.kernel)(stack)(this.method)('put')(this.path)(path);
     },
     'del': function(stack, path){
-      return (this['kernel'])(stack)(this.method)('delete')(this.path)(path);
+      return (this.kernel)(stack)(this.method)('delete')(this.path)(path);
     }
   });
 
@@ -168,15 +168,15 @@
   // ### dispatcher.body(ctx, [clb])
 
   // Perform actions based on the id and the classes of the body element.
-  exports['dispatcher']['body'] = dispatcher({
+  exports.dispatcher.body = dispatcher({
 
     // #### `(body_class)("class_name")`
 
     // check for a class name.
     'body_class': function(stack, class_name) {
-      return (this['kernel'])(stack.push(function(ctx, clb){
+      return (this.kernel)(stack.push(function(ctx, clb){
         if ($('body').hasClass(class_name)) { clb(ctx); }
-        else { clb['pass'](ctx); }
+        else { clb.pass(ctx); }
       }));
     },
 
@@ -184,9 +184,9 @@
 
     // check for an identifier.
     'body_id': function(stack, identifier) {
-      return (this['kernel'])(stack.push(function(ctx, clb){
+      return (this.kernel)(stack.push(function(ctx, clb){
         if ($('body')[0].id == identifier) { clb(ctx); }
-        else { clb['pass'](ctx); }
+        else { clb.pass(ctx); }
       }));
     },
 
@@ -194,9 +194,9 @@
 
     // continue only when body matches the CSS selector.
     'body': function(stack, selector) {
-      return (this['kernel'])(stack.push(function(ctx, clb){
-        if ($('body')['first']().filter(selector).length > 0) { clb(ctx); }
-        else { clb['pass'](ctx); }
+      return (this.kernel)(stack.push(function(ctx, clb){
+        if ($('body').first().filter(selector).length > 0) { clb(ctx); }
+        else { clb.pass(ctx); }
       }));
     }
   });
