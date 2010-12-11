@@ -1,6 +1,0 @@
-
-(function(exports){
-
-  %%% import %%%
-
-})(this);
