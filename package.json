@@ -1,7 +1,7 @@
 {
   "name": "chains",
   "description": "Task chaining library for JS",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/fd/chains.js",
   "author": "Simon Menke <simon.menke@gmail.com> (https://github.com/fd)",
   "main": "./lib/chains.js",
